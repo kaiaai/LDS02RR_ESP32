@@ -17,13 +17,13 @@
  *    The parameters specified here are those for for which we can't set up 
  *    reliable defaults, so we need to have the user set them.
  ***************************************************************************/
-PID::PID() {
-  PID::SetOutputLimits(0, 255);       //default output limit corresponds to 
-                                      //the arduino pwm limits
-  SampleTime = 100;             //default Controller Sample Time is 0.1 seconds
+PID_v1::PID_v1() {
+  SetOutputLimits(0, 255);    //default output limit corresponds to 
+                              //the arduino pwm limits
+  SampleTime = 100;           //default Controller Sample Time is 0.1 seconds
 }
 
-void PID::init(float* Input, float* Output, float* Setpoint,
+void PID_v1::init(float* Input, float* Output, float* Setpoint,
         float Kp, float Ki, float Kd, int ControllerDirection)
 {
 	
@@ -32,8 +32,8 @@ void PID::init(float* Input, float* Output, float* Setpoint,
   mySetpoint = Setpoint;
 	inAuto = false;
 	
-  PID::SetControllerDirection(ControllerDirection);
-  PID::SetTunings(Kp, Ki, Kd);
+  SetControllerDirection(ControllerDirection);
+  SetTunings(Kp, Ki, Kd);
 
   lastTime = millis()-SampleTime;        
 }
@@ -45,7 +45,7 @@ void PID::init(float* Input, float* Output, float* Setpoint,
  *   pid Output needs to be computed.  returns true when the output is computed,
  *   false when nothing has been done.
  **********************************************************************************/ 
-bool PID::Compute()
+bool PID_v1::Compute()
 {
    if(!inAuto) return false;
    unsigned long now = millis();
@@ -81,7 +81,7 @@ bool PID::Compute()
  * it's called automatically from the constructor, but tunings can also
  * be adjusted on the fly during normal operation
  ******************************************************************************/ 
-void PID::SetTunings(float Kp, float Ki, float Kd)
+void PID_v1::SetTunings(float Kp, float Ki, float Kd)
 {
    if (Kp<0 || Ki<0 || Kd<0) return;
  
@@ -103,7 +103,7 @@ void PID::SetTunings(float Kp, float Ki, float Kd)
 /* SetSampleTime(...) *********************************************************
  * sets the period, in Milliseconds, at which the calculation is performed	
  ******************************************************************************/
-void PID::SetSampleTime(int NewSampleTime)
+void PID_v1::SetSampleTime(int NewSampleTime)
 {
    if (NewSampleTime > 0)
    {
@@ -123,7 +123,7 @@ void PID::SetSampleTime(int NewSampleTime)
  *  want to clamp it from 0-125.  who knows.  at any rate, that can all be done
  *  here.
  **************************************************************************/
-void PID::SetOutputLimits(float Min, float Max)
+void PID_v1::SetOutputLimits(float Min, float Max)
 {
    if(Min >= Max) return;
    outMin = Min;
@@ -144,12 +144,12 @@ void PID::SetOutputLimits(float Min, float Max)
  * when the transition from manual to auto occurs, the controller is
  * automatically initialized
  ******************************************************************************/ 
-void PID::SetMode(int Mode)
+void PID_v1::SetMode(int Mode)
 {
     bool newAuto = (Mode == AUTOMATIC);
     if(newAuto == !inAuto)
     {  /*we just went from manual to auto*/
-        PID::Initialize();
+        Initialize();
     }
     inAuto = newAuto;
 }
@@ -158,7 +158,7 @@ void PID::SetMode(int Mode)
  *	does all the things that need to happen to ensure a bumpless transfer
  *  from manual to automatic mode.
  ******************************************************************************/ 
-void PID::Initialize()
+void PID_v1::Initialize()
 {
    ITerm = *myOutput;
    lastInput = *myInput;
@@ -172,7 +172,7 @@ void PID::Initialize()
  * know which one, because otherwise we may increase the output when we should
  * be decreasing.  This is called from the constructor.
  ******************************************************************************/
-void PID::SetControllerDirection(int Direction)
+void PID_v1::SetControllerDirection(int Direction)
 {
    if(inAuto && Direction !=controllerDirection)
    {
@@ -188,8 +188,8 @@ void PID::SetControllerDirection(int Direction)
  * functions query the internal state of the PID.  they're here for display 
  * purposes.  this are the functions the PID Front-end uses for example
  ******************************************************************************/
-float PID::GetKp(){ return  dispKp; }
-float PID::GetKi(){ return  dispKi;}
-float PID::GetKd(){ return  dispKd;}
-int PID::GetMode(){ return  inAuto ? AUTOMATIC : MANUAL;}
-int PID::GetDirection(){ return controllerDirection;}
+float PID_v1::GetKp(){ return  dispKp; }
+float PID_v1::GetKi(){ return  dispKi;}
+float PID_v1::GetKd(){ return  dispKd;}
+int PID_v1::GetMode(){ return  inAuto ? AUTOMATIC : MANUAL;}
+int PID_v1::GetDirection(){ return controllerDirection;}

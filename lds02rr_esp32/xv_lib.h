@@ -1,6 +1,4 @@
 #pragma once
-#ifndef XV_LIB_H
-#define XV_LIB_H
 
 #include <Arduino.h>
 #include "PID_v1_0_0.h"
@@ -108,11 +106,10 @@ class XV {
     unsigned long curMillis;
     unsigned long lastMillis;
     
-    PID rpmPID;
+    PID_v1 rpmPID;
     
     uint16_t aryDist[N_DATA_QUADS];    // there are (4) distances, one for each data quad
                                        // so the maximum distance is 16383 mm (0x3FFF)
     uint16_t aryQuality[N_DATA_QUADS]; // same with 'quality'
     uint16_t motor_rph;
 };
-#endif  // XV_LIB_H

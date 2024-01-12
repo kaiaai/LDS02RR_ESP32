@@ -1,8 +1,7 @@
-#ifndef PID_h
-#define PID_h
+#pragma once
 #define LIBRARY_VERSION	1.0.0
 
-class PID
+class PID_v1
 {
 
 
@@ -15,7 +14,7 @@ class PID
   #define REVERSE  1
 
   //commonly used functions **************************************************************************
-    PID();
+    PID_v1();
     void init(float*, float*, float*,  // * links the PID to the Input, Output, and 
          float, float, float, int);    //   Setpoint.  Initial tuning parameters are also set here
   
@@ -77,4 +76,3 @@ class PID
 	float outMin, outMax;
 	bool inAuto;
 };
-#endif
