@@ -15,26 +15,25 @@ XV::XV() {
   ixPacket = 0;                          // index into 'Packet' array
   motor_enabled = false;
 
-  rpm_min = rpm_setpoint*0.8;
-  rpm_max = rpm_setpoint*1.1;
-  pwm_val = 0.62;
+  scan_rpm_min = scan_rpm_setpoint*0.8;
+  scan_rpm_max = scan_rpm_setpoint*1.1;
+  pwm_val = 0.5;
 
   //rpm_setpoint = 0;
-  rpm_setpoint = DEFAULT_RPM;  // desired RPM 1.8KHz/5FPS/360 = 1 deg resolution
-  rpmPID.init(&motor_rpm, &pwm_val, &rpm_setpoint, 3.0e-3, 1.0e-3, 0.0, rpmPID.DIRECT);
-  rpmPID.SetOutputLimits(0, 1.0);
-  rpmPID.SetSampleTime(20);
-  rpmPID.SetMode(rpmPID.AUTOMATIC);
+  scan_rpm_setpoint = DEFAULT_SCAN_RPM;  // desired RPM 1.8KHz/5FPS/360 = 1 deg resolution
+  scanRpmPID.init(&scan_rpm, &pwm_val, &scan_rpm_setpoint, 3.0e-3, 1.0e-3, 0.0, scanRpmPID.DIRECT);
+  scanRpmPID.SetOutputLimits(0, 1.0);
+  scanRpmPID.SetSampleTime(20);
+  scanRpmPID.SetMode(scanRpmPID.AUTOMATIC);
 
   ClearVars();
 
-  motor_rph = 0;
-  rev_period_ms = 0;
+  scan_period_ms = 0;
 
   motor_check_timer = millis();
   motor_check_interval = 200;
-  rpm_err_thresh = 10;  // 2 seconds (10 * 200ms) to shutdown motor with improper RPM and high voltage
-  rpm_err = 0;
+  scan_rpm_err_thresh = 10;  // 2 seconds (10 * 200ms) to shutdown motor with improper RPM and high voltage
+  scan_rpm_err = 0;
   lastMillis = millis();
 }
 
@@ -42,30 +41,26 @@ void XV::setPacketCallback(PacketCallback packet_callback) {
   this->packet_callback = packet_callback;
 }
 
-void XV::setMotorCallback(MotorCallback motor_callback) {
+void XV::setMotorPwmCallback(MotorPwmCallback motor_callback) {
   this->motor_callback = motor_callback;
 }
-
-// xv_lds.setMotorMaxPWMDuty(2<<LDS_MOTOR_PWM_BITS-1);
 
 void XV::setScanPointCallback(ScanPointCallback scan_callback) {
   this->scan_callback = scan_callback; 
 }
 
-
-bool XV::setMotorRPM(float rpm) {
-  rpm_setpoint = (rpm <= 0) ? DEFAULT_RPM : rpm;
+bool XV::setScanRPM(float rpm) {
+  scan_rpm_setpoint = (rpm <= 0) ? DEFAULT_SCAN_RPM : rpm;
   return true;
 }
 
-void XV::setMotorPIDCoeffs(float Kp, float Ki, float Kd) {
-  rpmPID.SetTunings(Kp, Ki, Kd);
+void XV::setScanRpmPIDCoeffs(float Kp, float Ki, float Kd) {
+  scanRpmPID.SetTunings(Kp, Ki, Kd);
 }
 
-void XV::setMotorPIDSamplePeriod(int sample_period_ms) {
-  rpmPID.SetSampleTime(sample_period_ms);
+void XV::setScanRpmPIDSamplePeriod(int sample_period_ms) {
+  scanRpmPID.SetSampleTime(sample_period_ms);
 }
-
 
 void XV::processByte(int inByte) {
   // Switch, based on 'eState':
@@ -149,22 +144,21 @@ uint16_t XV::ProcessIndex() {
   if (angle == 0) {
     unsigned long curMillis = millis();
     // Time Interval in ms since last complete revolution
-    rev_period_ms = curMillis - lastMillis;
+    scan_period_ms = curMillis - lastMillis;
     lastMillis = curMillis;
   }
   return angle;
 }
 
-int XV::lastRevPeriodMs() {
-  return rev_period_ms;
+int XV::lastScanPeriodMs() {
+  return scan_period_ms;
 }
 
 void XV::ProcessSpeed() {
   // Extract motor speed from packet - two bytes little-endian, equals RPM/64
-  uint8_t motor_rph_low_byte = Packet[OFFSET_TO_SPEED_LSB];
-  uint8_t motor_rph_high_byte = Packet[OFFSET_TO_SPEED_MSB];
-  motor_rph = (motor_rph_high_byte << 8) | motor_rph_low_byte;
-  motor_rpm = float( (motor_rph_high_byte << 8) | motor_rph_low_byte ) / 64.0;
+  uint8_t scan_rph_low_byte = Packet[OFFSET_TO_SPEED_LSB];
+  uint8_t scan_rph_high_byte = Packet[OFFSET_TO_SPEED_MSB];
+  scan_rpm = float( (scan_rph_high_byte << 8) | scan_rph_low_byte ) / 64.0;
 }
 
 /*
@@ -254,7 +248,7 @@ bool XV::loop() {
   if (!motor_enabled)
     return false;
 
-  rpmPID.Compute();
+  scanRpmPID.Compute();
   if (pwm_val != pwm_last) {
     if (motor_callback)
       motor_callback(float(pwm_val));
@@ -266,9 +260,8 @@ bool XV::loop() {
 void XV::enableMotor(bool enable) {
   motor_enabled = enable;
   
-  if (enable) {
-    rpm_err = 0;  // reset rpm error
-  }
+  if (enable)
+    scan_rpm_err = 0;  // reset rpm error
 
   if (motor_callback)
     motor_callback(enable ? float(pwm_val) : 0);
@@ -279,20 +272,20 @@ bool XV::motorCheck() {  // Make sure the motor RPMs are good else shut it down
   if (now - motor_check_timer <= motor_check_interval)
     return false;
   
-  if (motor_enabled && ((motor_rpm < rpm_min) || (motor_rpm > rpm_max))) {
-    rpm_err++;
+  if (motor_enabled && ((scan_rpm < scan_rpm_min) || (scan_rpm > scan_rpm_max))) {
+    scan_rpm_err++;
   } else {
-    rpm_err = 0;
+    scan_rpm_err = 0;
   }
 
   motor_check_timer = millis();
 
   // TODO instead, check how long the RPM has been out of bounds
-  return (rpm_err > rpm_err_thresh);
+  return (scan_rpm_err > scan_rpm_err_thresh);
 }
 
-float XV::getMotorRPM() {
-  return float(motor_rpm);
+float XV::getScanRPM() {
+  return scan_rpm;
 }
 
 bool XV::isMotorEnabled() {

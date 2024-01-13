@@ -13,26 +13,27 @@ class XV {
   public:
     typedef void (*ScanPointCallback)(uint16_t, uint16_t, uint16_t, byte);
     typedef void (*PacketCallback)(uint16_t, byte*, uint16_t);
-    typedef void (*MotorCallback)(float);
+    typedef void (*MotorPwmCallback)(float);
 
   public:
     XV();
     void processByte(int inByte);
     void enableMotor(bool enable);
     bool loop();
-    float getMotorRPM();
+    float getScanRPM();
     bool isMotorEnabled();
-    int lastRevPeriodMs();
+    int lastScanPeriodMs();
 
-    bool setMotorRPM(float rpm = DEFAULT_RPM);
-    void setMotorPIDCoeffs(float Kp, float Ki, float Kd);
+    bool setScanRPM(float rpm = DEFAULT_SCAN_RPM);
+    void setScanRpmPIDCoeffs(float Kp, float Ki, float Kd);
     void setScanPointCallback(ScanPointCallback scan_callback);
-    void setMotorCallback(MotorCallback motor_callback);
+    void setMotorPwmCallback(MotorPwmCallback motor_callback);
     void setPacketCallback(PacketCallback packet_callback);
-    void setMotorPIDSamplePeriod(int sample_period_ms);
+    void setScanRpmPIDSamplePeriod(int sample_period_ms);
 
     static const int BAUD_RATE = 115200;
-    static constexpr float DEFAULT_RPM = 300.0;
+    static constexpr float DEFAULT_SCAN_RPM = 300.0;
+    static const uint32_t SAMPLE_RATE_HZ = 1800;
 
     // REF: https://github.com/Xevel/NXV11/wiki
     // The bit 7 of byte 1 seems to indicate that the distance could not be calculated.
@@ -58,18 +59,18 @@ class XV {
     void ClearVars();
 
     ScanPointCallback scan_callback;
-    MotorCallback motor_callback;
+    MotorPwmCallback motor_callback;
     PacketCallback packet_callback;
 
-    float rpm_setpoint;         // desired RPM (uses float to be compatible with PID library)
-    float rpm_min;
-    float rpm_max;
+    float scan_rpm_setpoint; // desired scan RPM
+    float scan_rpm_min;
+    float scan_rpm_max;
     //float pwm_max;              // max analog value.  probably never needs to change from 1023
     //float pwm_min;              // min analog pulse value to spin the motor
   
     bool motor_enabled;        // to spin the laser or not.  No data when not spinning
     int eState;
-    int rev_period_ms;
+    int scan_period_ms;
 
     static const unsigned char COMMAND = 0xFA;        // Start of new packet
     static const int INDEX_LO = 0xA0;                 // lowest index value
@@ -103,17 +104,16 @@ class XV {
     
     float pwm_val;
     float pwm_last;
-    float motor_rpm;
+    float scan_rpm;
     unsigned long motor_check_timer;
     unsigned long motor_check_interval;
-    unsigned int rpm_err_thresh;  // 2 seconds (10 * 200ms) to shutdown motor with improper RPM and high voltage
-    unsigned int rpm_err;
+    unsigned int scan_rpm_err_thresh;  // 2 seconds (10 * 200ms) to shutdown motor with improper RPM and high voltage
+    unsigned int scan_rpm_err;
     unsigned long lastMillis;
     
-    PID_v1 rpmPID;
+    PID_v1 scanRpmPID;
     
     uint16_t aryDist[N_DATA_QUADS];    // there are (4) distances, one for each data quad
                                        // so the maximum distance is 16383 mm (0x3FFF)
     uint16_t aryQuality[N_DATA_QUADS]; // same with 'quality'
-    uint16_t motor_rph;
 };

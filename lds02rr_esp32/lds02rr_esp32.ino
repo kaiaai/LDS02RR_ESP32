@@ -34,7 +34,7 @@ void setup() {
   Serial1.begin(115200, SERIAL_8N1, SENSOR_RX, SENSOR_TX); // XV LDS data
 
   xv_lds.setScanPointCallback(xv_scan_callback);
-  xv_lds.setMotorCallback(xv_motor_callback);
+  xv_lds.setMotorPwmCallback(xv_motor_pwm_callback);
   xv_lds.setPacketCallback(xv_packet_callback);  
   xv_lds.enableMotor(true);
 }
@@ -61,7 +61,7 @@ void xv_scan_callback(uint16_t angle_deg, uint16_t distance_mm,
   //Serial.println(err);
 }
 
-void xv_motor_callback(float pwm) {
+void xv_motor_pwm_callback(float pwm) {
   //Serial.print("Motor callback ");
   //Serial.print(xv_lds.getMotorRPM());
   //Serial.print(" ");
