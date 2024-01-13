@@ -1,19 +1,22 @@
+// Copyright (c) 2024 makerspet.com
+// Based on
+//   Arduino PID Library - Version 1.0.1
+//   by Brett Beauregard <br3ttb@gmail.com> brettbeauregard.com
+//   This Library is licensed under a GPLv3 License
+
 #pragma once
 #define LIBRARY_VERSION	1.0.0
 
-class PID_v1
-{
-
-
+class PID_v1 {
   public:
 
-  //Constants used in some of the functions below
-  #define AUTOMATIC	1
-  #define MANUAL	0
-  #define DIRECT  0
-  #define REVERSE  1
+    //Constants used in some of the functions below
+    static const int8_t AUTOMATIC = 1;
+    static const int8_t MANUAL = 0;
+    static const int8_t DIRECT = 0;
+    static const int8_t REVERSE = 1;
 
-  //commonly used functions **************************************************************************
+    //commonly used functions **************************************************************************
     PID_v1();
     void init(float*, float*, float*,  // * links the PID to the Input, Output, and 
          float, float, float, int);    //   Setpoint.  Initial tuning parameters are also set here
@@ -35,44 +38,42 @@ class PID_v1
     void SetTunings(float, float,       // * While most users will set the tunings once in the 
                     float);         	  //   constructor, this function gives the user the option
                                           //   of changing tunings during runtime for Adaptive control
-	void SetControllerDirection(int);	  // * Sets the Direction, or "Action" of the controller. DIRECT
+    void SetControllerDirection(int);	  // * Sets the Direction, or "Action" of the controller. DIRECT
 										  //   means the output will increase when error is positive. REVERSE
 										  //   means the opposite.  it's very unlikely that this will be needed
 										  //   once it is set in the constructor.
     void SetSampleTime(int);              // * sets the frequency, in Milliseconds, with which 
                                           //   the PID calculation is performed.  default is 100
 										  
-										  
-										  
-  //Display functions ****************************************************************
-	float GetKp();						  // These functions query the pid for interal values.
-	float GetKi();						  //  they were created mainly for the pid front-end,
-	float GetKd();						  // where it's important to know what is actually 
-	int GetMode();						  //  inside the PID.
-	int GetDirection();					  //
+    //Display functions ****************************************************************
+  	float GetKp();						  // These functions query the pid for interal values.
+  	float GetKi();						  //  they were created mainly for the pid front-end,
+  	float GetKd();						  // where it's important to know what is actually 
+  	int GetMode();						  //  inside the PID.
+  	int GetDirection();					  //
 
   private:
-	void Initialize();
-	
-	float dispKp;				// * we'll hold on to the tuning parameters in user-entered 
-	float dispKi;				//   format for display purposes
-	float dispKd;				//
-    
-	float kp;                  // * (P)roportional Tuning Parameter
-  float ki;                  // * (I)ntegral Tuning Parameter
-  float kd;                  // * (D)erivative Tuning Parameter
-
-	int controllerDirection;
-
-  float *myInput;              // * Pointers to the Input, Output, and Setpoint variables
-  float *myOutput;             //   This creates a hard link between the variables and the 
-  float *mySetpoint;           //   PID, freeing the user from having to constantly tell us
-                                //   what these values are.  with pointers we'll just know.
-			  
-	unsigned long lastTime;
-	float ITerm, lastInput;
-
-	unsigned long SampleTime;
-	float outMin, outMax;
-	bool inAuto;
+  	void Initialize();
+  	
+  	float dispKp;				// * we'll hold on to the tuning parameters in user-entered 
+  	float dispKi;				//   format for display purposes
+  	float dispKd;				//
+      
+  	float kp;                  // * (P)roportional Tuning Parameter
+    float ki;                  // * (I)ntegral Tuning Parameter
+    float kd;                  // * (D)erivative Tuning Parameter
+  
+  	int controllerDirection;
+  
+    float *myInput;              // * Pointers to the Input, Output, and Setpoint variables
+    float *myOutput;             //   This creates a hard link between the variables and the 
+    float *mySetpoint;           //   PID, freeing the user from having to constantly tell us
+                                  //   what these values are.  with pointers we'll just know.
+  			  
+  	unsigned long lastTime;
+  	float ITerm, lastInput;
+  
+  	unsigned long SampleTime;
+  	float outMin, outMax;
+  	bool inAuto;
 };

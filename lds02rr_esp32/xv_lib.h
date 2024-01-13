@@ -1,13 +1,19 @@
+// Copyright (c) 2024 makerspet.com
+//   Apache 2.0 license
+// Based on
+//   Copyright 2014-2021 James LeRoy getSurreal.com
+//   https://github.com/getSurreal/XV_Lidar_Controller
+
 #pragma once
 
 #include <Arduino.h>
 #include "PID_v1_0_0.h"
 
-typedef void (*XvScanPointCallback)(uint16_t, uint16_t, uint16_t, byte);
-typedef void (*XvPacketCallback)(uint16_t, byte*, uint16_t);
-typedef void (*XvMotorCallback)(float);
-
 class XV {
+  public:
+    typedef void (*ScanPointCallback)(uint16_t, uint16_t, uint16_t, byte);
+    typedef void (*PacketCallback)(uint16_t, byte*, uint16_t);
+    typedef void (*MotorCallback)(float);
 
   public:
     XV();
@@ -18,15 +24,15 @@ class XV {
     bool isMotorEnabled();
     int lastRevPeriodMs();
 
-    bool setMotorRPM(float rpm);
+    bool setMotorRPM(float rpm = DEFAULT_RPM);
     void setMotorPIDCoeffs(float Kp, float Ki, float Kd);
-    void setScanPointCallback(XvScanPointCallback scan_callback);
-    void setMotorCallback(XvMotorCallback motor_callback);
-    void setPacketCallback(XvPacketCallback packet_callback);
+    void setScanPointCallback(ScanPointCallback scan_callback);
+    void setMotorCallback(MotorCallback motor_callback);
+    void setPacketCallback(PacketCallback packet_callback);
     void setMotorPIDSamplePeriod(int sample_period_ms);
 
     static const int BAUD_RATE = 115200;
-    static constexpr float RPM_DEFAULT = 300.0;
+    static constexpr float DEFAULT_RPM = 300.0;
 
     // REF: https://github.com/Xevel/NXV11/wiki
     // The bit 7 of byte 1 seems to indicate that the distance could not be calculated.
@@ -51,9 +57,9 @@ class XV {
     bool motorCheck();    
     void ClearVars();
 
-    XvScanPointCallback scan_callback;
-    XvMotorCallback motor_callback;
-    XvPacketCallback packet_callback;
+    ScanPointCallback scan_callback;
+    MotorCallback motor_callback;
+    PacketCallback packet_callback;
 
     float rpm_setpoint;         // desired RPM (uses float to be compatible with PID library)
     float rpm_min;
@@ -61,7 +67,7 @@ class XV {
     //float pwm_max;              // max analog value.  probably never needs to change from 1023
     //float pwm_min;              // min analog pulse value to spin the motor
   
-    bool motor_enable;        // to spin the laser or not.  No data when not spinning
+    bool motor_enabled;        // to spin the laser or not.  No data when not spinning
     int eState;
     int rev_period_ms;
 
@@ -98,12 +104,10 @@ class XV {
     float pwm_val;
     float pwm_last;
     float motor_rpm;
-    unsigned long now;
     unsigned long motor_check_timer;
     unsigned long motor_check_interval;
     unsigned int rpm_err_thresh;  // 2 seconds (10 * 200ms) to shutdown motor with improper RPM and high voltage
     unsigned int rpm_err;
-    unsigned long curMillis;
     unsigned long lastMillis;
     
     PID_v1 rpmPID;

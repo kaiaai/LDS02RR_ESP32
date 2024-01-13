@@ -1,16 +1,10 @@
-/**********************************************************************************************
- * Arduino PID Library - Version 1.0.1
- * by Brett Beauregard <br3ttb@gmail.com> brettbeauregard.com
- *
- * This Library is licensed under a GPLv3 License
- **********************************************************************************************/
+// Copyright (c) 2024 makerspet.com
+// Based on
+//   Arduino PID Library - Version 1.0.1
+//   by Brett Beauregard <br3ttb@gmail.com> brettbeauregard.com
+//   This Library is licensed under a GPLv3 License
 
-#if ARDUINO >= 100
-  #include "Arduino.h"
-#else
-  #include "WProgram.h"
-#endif
-
+#include <Arduino.h>
 #include "PID_v1_0_0.h"
 
 /*Constructor (...)*********************************************************
@@ -144,26 +138,27 @@ void PID_v1::SetOutputLimits(float Min, float Max)
  * when the transition from manual to auto occurs, the controller is
  * automatically initialized
  ******************************************************************************/ 
-void PID_v1::SetMode(int Mode)
-{
-    bool newAuto = (Mode == AUTOMATIC);
-    if(newAuto == !inAuto)
-    {  /*we just went from manual to auto*/
-        Initialize();
-    }
-    inAuto = newAuto;
+void PID_v1::SetMode(int Mode) {
+  bool newAuto = (Mode == AUTOMATIC);
+  if (newAuto == !inAuto) {
+    // we just went from manual to auto
+    Initialize();
+  }
+  inAuto = newAuto;
 }
  
 /* Initialize()****************************************************************
  *	does all the things that need to happen to ensure a bumpless transfer
  *  from manual to automatic mode.
  ******************************************************************************/ 
-void PID_v1::Initialize()
-{
-   ITerm = *myOutput;
-   lastInput = *myInput;
-   if(ITerm > outMax) ITerm = outMax;
-   else if(ITerm < outMin) ITerm = outMin;
+void PID_v1::Initialize() {
+  ITerm = *myOutput;
+  lastInput = *myInput;
+  if (ITerm > outMax)
+    ITerm = outMax;
+  else
+    if (ITerm < outMin)
+      ITerm = outMin;
 }
 
 /* SetControllerDirection(...)*************************************************
@@ -172,10 +167,8 @@ void PID_v1::Initialize()
  * know which one, because otherwise we may increase the output when we should
  * be decreasing.  This is called from the constructor.
  ******************************************************************************/
-void PID_v1::SetControllerDirection(int Direction)
-{
-   if(inAuto && Direction !=controllerDirection)
-   {
+void PID_v1::SetControllerDirection(int Direction) {
+   if(inAuto && Direction !=controllerDirection) {
 	  kp = (0 - kp);
       ki = (0 - ki);
       kd = (0 - kd);
